@@ -195,17 +195,17 @@ fn Iterator(comptime T: type) type {
     return struct {
         const Self = @This();
 
-        node: ?*Node(T),
+        _node: ?*Node(T),
 
         fn init(node: ?*Node(T)) Self {
             return Self{
-                .node = node,
+                ._node = node,
             };
         }
 
         pub fn next(self: *Self) ?T {
-            const node = self.node orelse return null;
-            self.node = node.get_next();
+            const node = self._node orelse return null;
+            self._node = node.get_next();
             return node.get_value();
         }
     };
