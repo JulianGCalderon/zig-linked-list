@@ -146,6 +146,10 @@ pub fn List(comptime T: type) type {
 
             return iterated;
         }
+
+        pub fn iterator(self: Self) Iterator(T) {
+            return Iterator(T).init(self.first);
+        }
     };
 }
 
@@ -183,6 +187,26 @@ fn Node(comptime T: type) type {
 
         pub fn get_value(self: Self) T {
             return self._value;
+        }
+    };
+}
+
+fn Iterator(comptime T: type) type {
+    return struct {
+        const Self = @This();
+
+        node: ?*Node(T),
+
+        fn init(node: ?*Node(T)) Self {
+            return Self{
+                .node = node,
+            };
+        }
+
+        pub fn next(self: *Self) ?T {
+            const node = self.node orelse return null;
+            self.node = node.get_next();
+            return node.get_value();
         }
     };
 }

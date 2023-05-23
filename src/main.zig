@@ -154,6 +154,23 @@ test "Given a list with multiple elements, when iterating internally, stops on f
     try expectEqual(sum, 3);
 }
 
+test "Given a list with multiple elements, when iterating externally, can access all elements" {
+    var l = List(u32).init(allocator);
+    defer l.deinit();
+
+    try l.push(0);
+    try l.push(1);
+    try l.push(2);
+    try l.push(3);
+
+    var i = l.iterator();
+
+    try expectEqual(i.next(), 0);
+    try expectEqual(i.next(), 1);
+    try expectEqual(i.next(), 2);
+    try expectEqual(i.next(), 3);
+}
+
 test "Can create a list with different types" {
     var l = List(*const void).init(allocator);
     defer l.deinit();
