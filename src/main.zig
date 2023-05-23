@@ -153,3 +153,25 @@ test "Given a list with multiple elements, when iterating internally, stops on f
     try expectEqual(counted, 3);
     try expectEqual(sum, 3);
 }
+
+test "Can create a list with different types" {
+    var l = List(*const void).init(allocator);
+    defer l.deinit();
+
+    const element1 = 1;
+    const element2 = "Hola";
+    const element3 = 3.14;
+
+    const void_element1 = @ptrCast(*const void, &element1);
+    const void_element2 = @ptrCast(*const void, &element2);
+    const void_element3 = @ptrCast(*const void, &element3);
+
+    try l.push(void_element1);
+    try l.push(void_element2);
+    try l.push(void_element3);
+
+    try expectEqual(l.len(), 3);
+    try expectEqual(l.get(0), void_element1);
+    try expectEqual(l.get(1), void_element2);
+    try expectEqual(l.get(2), void_element3);
+}
