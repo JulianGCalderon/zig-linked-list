@@ -111,3 +111,45 @@ test "Given a list multiple elements, can remove an element in an inbetween posi
     try expectEqual(l.get(1), 0);
     try expectEqual(l.get(2), 0);
 }
+
+fn adder(element: u32, sum: *u32) bool {
+    sum.* += element;
+    return true;
+}
+
+fn conditional_adder(element: u32, sum: *u32) bool {
+    sum.* += element;
+    return element != 0;
+}
+
+test "Given a list with multiple elements, when iterating internally, can access all elements" {
+    var l = List(u32).init(allocator);
+    defer l.deinit();
+
+    try l.push(1);
+    try l.push(2);
+    try l.push(3);
+    try l.push(4);
+
+    var sum: u32 = 0;
+    const counted = l.for_each_element(&sum, adder);
+
+    try expectEqual(counted, 4);
+    try expectEqual(sum, 10);
+}
+
+test "Given a list with multiple elements, when iterating internally, stops on first false" {
+    var l = List(u32).init(allocator);
+    defer l.deinit();
+
+    try l.push(1);
+    try l.push(2);
+    try l.push(0);
+    try l.push(3);
+
+    var sum: u32 = 0;
+    const counted = l.for_each_element(&sum, conditional_adder);
+
+    try expectEqual(counted, 3);
+    try expectEqual(sum, 3);
+}

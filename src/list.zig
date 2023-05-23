@@ -136,6 +136,24 @@ pub fn List(comptime T: type) type {
             }
             return current;
         }
+
+        pub fn for_each_element(
+            self: Self,
+            context: anytype,
+            callback: *const fn (T, @TypeOf(context)) bool,
+        ) usize {
+            var current = self.first;
+            var iterated: usize = 0;
+            while (current) |node| {
+                iterated += 1;
+                if (!callback(node.value, context)) {
+                    break;
+                }
+                current = node.next;
+            }
+
+            return iterated;
+        }
     };
 }
 
