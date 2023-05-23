@@ -27,9 +27,7 @@ pub fn List(comptime T: type) type {
         pub fn deinit(self: Self) void {
             var current = self.first;
             while (current) |node| {
-                var next = node.next;
-                self.allocator.destroy(node);
-                current = next;
+                current = node.deinit();
             }
         }
 
@@ -48,7 +46,7 @@ pub fn List(comptime T: type) type {
                 self.first = new_node;
             } else {
                 var last_node = try self.get_last_node();
-                last_node.next = new_node;
+                last_node.link(new_node);
             }
 
             self.length += 1;
@@ -61,64 +59,57 @@ pub fn List(comptime T: type) type {
             const new_node = try Node(T).init(self.allocator, element);
 
             if (index == 0) {
-                new_node.next = self.first;
+                new_node.link(self.first);
                 self.first = new_node;
             } else {
                 var previous = self.get_node_at_index(index - 1) catch unreachable;
-                new_node.next = previous.next;
-                previous.next = new_node;
+                new_node.link(previous.get_next());
+                previous.link(new_node);
             }
 
             self.length += 1;
         }
 
         pub fn remove(self: *Self, index: usize) ListError!T {
-            if (index >= self.len()) {
-                return self.pop();
+            if (self.length <= 1) {
+                return self.remove_first();
+            }
+            if (index >= self.length) {
+                return ListError.IndexOutOfBounds;
             }
 
-            if (index == 0) {
-                const next = self.first.?.next;
-                const value = self.unlink_node(&self.first);
-                self.first = next;
-                return value;
+            const previous = try self.get_node_at_index(index - 1);
+            const to_remove = previous.get_next().?;
+
+            const value = to_remove.get_value();
+            previous.link(to_remove.deinit());
+
+            self.length -= 1;
+
+            return value;
+        }
+
+        pub fn pop(self: *Self) ListError!T {
+            return self.remove(self.length - 1);
+        }
+
+        fn remove_first(self: *Self) ListError!T {
+            if (self.length == 0) {
+                return ListError.EmptyList;
             }
 
-            const previous = self.get_node_at_index(index - 1) catch unreachable;
-            const next = previous.next.?.next;
-            const value = self.unlink_node(&previous.next);
-            previous.next = next;
+            const to_remove = self.first.?;
+
+            const value = to_remove.get_value();
+            self.first = to_remove.deinit();
+
+            self.length = 0;
             return value;
         }
 
         pub fn get(self: Self, index: usize) ListError!T {
             const node = try self.get_node_at_index(index);
-            return node.value;
-        }
-
-        pub fn pop(self: *Self) ListError!T {
-            if (self.len() == 0) {
-                return ListError.EmptyList;
-            }
-            if (self.len() == 1) {
-                return self.unlink_node(&self.first);
-            } else {
-                var previous = self.get_node_at_index(self.len() - 2) catch unreachable;
-                return self.unlink_node(&previous.next);
-            }
-        }
-
-        fn unlink_node(self: *Self, node: *?*Node(T)) T {
-            const value = node.*.?.value;
-            node.*.?.deinit(self.allocator);
-            self.length -= 1;
-            node.* = null;
-            return value;
-        }
-
-        fn link_node(self: *Self, holder: *?*Node(T), node: *Node(T)) void {
-            _ = self;
-            holder.* = node;
+            return node.get_value();
         }
 
         fn get_last_node(self: Self) ListError!*Node(T) {
@@ -132,7 +123,7 @@ pub fn List(comptime T: type) type {
 
             var current = self.first.?;
             for (0..index) |_| {
-                current = current.next.?;
+                current = current.get_next().?;
             }
             return current;
         }
@@ -146,10 +137,11 @@ pub fn List(comptime T: type) type {
             var iterated: usize = 0;
             while (current) |node| {
                 iterated += 1;
-                if (!callback(node.value, context)) {
+                if (!callback(node.get_value(), context)) {
                     break;
                 }
-                current = node.next;
+
+                current = node.get_next();
             }
 
             return iterated;
@@ -161,19 +153,36 @@ fn Node(comptime T: type) type {
     return struct {
         const Self = @This();
 
-        next: ?*Node(T),
-        value: T,
+        _next: ?*Node(T),
+        _value: T,
+        _allocator: Allocator,
 
         pub fn init(allocator: Allocator, element: T) ListError!*Self {
             var node = try allocator.create(Self);
-            node.next = null;
-            node.value = element;
+
+            node._allocator = allocator;
+            node._next = null;
+            node._value = element;
 
             return node;
         }
 
-        pub fn deinit(self: *Self, allocator: Allocator) void {
-            allocator.destroy(self);
+        pub fn deinit(self: *Self) ?*Node(T) {
+            const next = self._next;
+            self._allocator.destroy(self);
+            return next;
+        }
+
+        pub fn link(self: *Self, node: ?*Node(T)) void {
+            self._next = node;
+        }
+
+        pub fn get_next(self: Self) ?*Node(T) {
+            return self._next;
+        }
+
+        pub fn get_value(self: Self) T {
+            return self._value;
         }
     };
 }
