@@ -76,3 +76,38 @@ test "Given a list with multiple elements, can remove all of them" {
     try expectEqual(removed3, 3);
     try expectError(ListError.IndexOutOfBounds, l.get(0));
 }
+
+test "Given a list multiple elements, can insert in inbetween position" {
+    var l = List(u32).init(allocator);
+    defer l.deinit();
+
+    try l.push(0);
+    try l.push(0);
+    try l.push(0);
+
+    try l.insert(1, 1);
+
+    try expectEqual(l.len(), 4);
+    try expectEqual(l.get(0), 0);
+    try expectEqual(l.get(1), 1);
+    try expectEqual(l.get(2), 0);
+    try expectEqual(l.get(3), 0);
+}
+
+test "Given a list multiple elements, can remove an element in an inbetween position" {
+    var l = List(u32).init(allocator);
+    defer l.deinit();
+
+    try l.push(0);
+    try l.push(1);
+    try l.push(0);
+    try l.push(0);
+
+    const element = try l.remove(1);
+
+    try expectEqual(l.len(), 3);
+    try expectEqual(element, 1);
+    try expectEqual(l.get(0), 0);
+    try expectEqual(l.get(1), 0);
+    try expectEqual(l.get(2), 0);
+}

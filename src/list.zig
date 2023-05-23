@@ -54,6 +54,43 @@ pub fn List(comptime T: type) type {
             self.length += 1;
         }
 
+        pub fn insert(self: *Self, element: T, index: usize) ListError!void {
+            if (index >= self.len()) {
+                return self.push(element);
+            }
+            const new_node = try Node(T).init(self.allocator, element);
+
+            if (index == 0) {
+                new_node.next = self.first;
+                self.first = new_node;
+            } else {
+                var previous = self.get_node_at_index(index - 1) catch unreachable;
+                new_node.next = previous.next;
+                previous.next = new_node;
+            }
+
+            self.length += 1;
+        }
+
+        pub fn remove(self: *Self, index: usize) ListError!T {
+            if (index >= self.len()) {
+                return self.pop();
+            }
+
+            if (index == 0) {
+                const next = self.first.?.next;
+                const value = self.unlink_node(&self.first);
+                self.first = next;
+                return value;
+            }
+
+            const previous = self.get_node_at_index(index - 1) catch unreachable;
+            const next = previous.next.?.next;
+            const value = self.unlink_node(&previous.next);
+            previous.next = next;
+            return value;
+        }
+
         pub fn get(self: Self, index: usize) ListError!T {
             const node = try self.get_node_at_index(index);
             return node.value;
@@ -64,19 +101,24 @@ pub fn List(comptime T: type) type {
                 return ListError.EmptyList;
             }
             if (self.len() == 1) {
-                return self.destroy_node(&self.first);
+                return self.unlink_node(&self.first);
             } else {
-                var penultimate = self.get_node_at_index(self.len() - 2) catch unreachable;
-                return self.destroy_node(&penultimate.next);
+                var previous = self.get_node_at_index(self.len() - 2) catch unreachable;
+                return self.unlink_node(&previous.next);
             }
         }
 
-        fn destroy_node(self: *Self, node: *?*Node(T)) T {
+        fn unlink_node(self: *Self, node: *?*Node(T)) T {
             const value = node.*.?.value;
             node.*.?.deinit(self.allocator);
             self.length -= 1;
             node.* = null;
             return value;
+        }
+
+        fn link_node(self: *Self, holder: *?*Node(T), node: *Node(T)) void {
+            _ = self;
+            holder.* = node;
         }
 
         fn get_last_node(self: Self) ListError!*Node(T) {
