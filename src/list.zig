@@ -222,7 +222,3 @@ fn Iterator(comptime T: type) type {
         }
     };
 }
-
-test {
-    _ = @import("tests.zig");
-}
