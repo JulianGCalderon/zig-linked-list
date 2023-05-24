@@ -71,7 +71,7 @@ pub fn List(comptime T: type) type {
         }
 
         pub fn remove(self: *Self, index: usize) ListError!T {
-            if (self.length <= 1) {
+            if (self.length <= 1 or index == 0) {
                 return self.remove_first();
             }
             if (index >= self.length) {
@@ -209,4 +209,8 @@ fn Iterator(comptime T: type) type {
             return node.get_value();
         }
     };
+}
+
+test {
+    _ = @import("tests.zig");
 }
