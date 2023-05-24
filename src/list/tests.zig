@@ -43,7 +43,7 @@ test "Given an empty list, can push multiple elements" {
     try expectEqual(l.get(2), 3);
 }
 
-test "Given a list with one element, can remove it" {
+test "Given a list with one element, can pop it" {
     var l = List(u32).init(allocator);
     defer l.deinit();
 
@@ -56,7 +56,7 @@ test "Given a list with one element, can remove it" {
     try expectError(ListError.IndexOutOfBounds, l.get(0));
 }
 
-test "Given a list with multiple elements, can remove all of them" {
+test "Given a list with multiple elements, can pop all of them" {
     var l = List(u32).init(allocator);
     defer l.deinit();
 
@@ -108,6 +108,41 @@ test "Given a list multiple elements, can remove an element in an inbetween posi
     try expectEqual(l.get(0), 0);
     try expectEqual(l.get(1), 0);
     try expectEqual(l.get(2), 0);
+}
+
+test "Given a list with multiple elements, can remove elements from the first position" {
+    var l = List(u32).init(allocator);
+    defer l.deinit();
+
+    try l.push(0);
+    try l.push(1);
+    try l.push(2);
+    try l.push(3);
+
+    const element0 = try l.remove(0);
+    const element1 = try l.remove(0);
+    const element2 = try l.remove(0);
+    const element3 = try l.remove(0);
+
+    try expectEqual(l.len(), 0);
+    try expectEqual(element0, 0);
+    try expectEqual(element1, 1);
+    try expectEqual(element2, 2);
+    try expectEqual(element3, 3);
+}
+
+test "Given an empty list, can push a slice" {
+    var l = List(usize).init(allocator);
+    defer l.deinit();
+
+    var numbers = [_]usize{ 1, 2, 3 };
+
+    try l.push_slice(numbers[0..]);
+
+    try expectEqual(l.len(), 3);
+    try expectEqual(l.get(0), 1);
+    try expectEqual(l.get(1), 2);
+    try expectEqual(l.get(2), 3);
 }
 
 fn adder(element: u32, sum: *u32) bool {

@@ -103,7 +103,7 @@ pub fn List(comptime T: type) type {
             const value = to_remove.get_value();
             self.first = to_remove.deinit();
 
-            self.length = 0;
+            self.length -= 1;
             return value;
         }
 
@@ -149,6 +149,18 @@ pub fn List(comptime T: type) type {
 
         pub fn iterator(self: Self) Iterator(T) {
             return Iterator(T).init(self.first);
+        }
+
+        pub fn push_slice(self: *Self, slice: []T) ListError!void {
+            try self.push(slice[0]);
+
+            var last_node = try self.get_last_node();
+            for (slice[1..]) |element| {
+                var to_add = try Node(T).init(self.allocator, element);
+                last_node.link(to_add);
+                self.length += 1;
+                last_node = to_add;
+            }
         }
     };
 }
