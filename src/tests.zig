@@ -13,7 +13,7 @@ test "Can create empty list" {
     const l = List(u32).init(allocator);
     defer l.deinit();
 
-    try expectEqual(l.len(), 0);
+    try expectEqual(l.length(), 0);
     try expect(l.empty());
 }
 
@@ -24,7 +24,7 @@ test "Given an empty list, can push an element" {
     try l.push(1);
 
     try expect(!l.empty());
-    try expectEqual(l.len(), 1);
+    try expectEqual(l.length(), 1);
     try expectEqual(l.get(0), 1);
 }
 
@@ -37,7 +37,7 @@ test "Given an empty list, can push multiple elements" {
     try l.push(3);
 
     try expect(!l.empty());
-    try expectEqual(l.len(), 3);
+    try expectEqual(l.length(), 3);
     try expectEqual(l.get(0), 1);
     try expectEqual(l.get(1), 2);
     try expectEqual(l.get(2), 3);
@@ -51,7 +51,7 @@ test "Given a list with one element, can pop it" {
     const removed = try l.pop();
 
     try expect(l.empty());
-    try expectEqual(l.len(), 0);
+    try expectEqual(l.length(), 0);
     try expectEqual(removed, 1);
     try expectError(ListError.IndexOutOfBounds, l.get(0));
 }
@@ -68,7 +68,7 @@ test "Given a list with multiple elements, can pop all of them" {
     const removed1 = try l.pop();
 
     try expect(l.empty());
-    try expectEqual(l.len(), 0);
+    try expectEqual(l.length(), 0);
     try expectEqual(removed1, 1);
     try expectEqual(removed2, 2);
     try expectEqual(removed3, 3);
@@ -85,7 +85,7 @@ test "Given a list multiple elements, can insert in inbetween position" {
 
     try l.insert(1, 1);
 
-    try expectEqual(l.len(), 4);
+    try expectEqual(l.length(), 4);
     try expectEqual(l.get(0), 0);
     try expectEqual(l.get(1), 1);
     try expectEqual(l.get(2), 0);
@@ -103,7 +103,7 @@ test "Given a list multiple elements, can remove an element in an inbetween posi
 
     const element = try l.remove(1);
 
-    try expectEqual(l.len(), 3);
+    try expectEqual(l.length(), 3);
     try expectEqual(element, 1);
     try expectEqual(l.get(0), 0);
     try expectEqual(l.get(1), 0);
@@ -124,7 +124,7 @@ test "Given a list with multiple elements, can remove elements from the first po
     const element2 = try l.remove(0);
     const element3 = try l.remove(0);
 
-    try expectEqual(l.len(), 0);
+    try expectEqual(l.length(), 0);
     try expectEqual(element0, 0);
     try expectEqual(element1, 1);
     try expectEqual(element2, 2);
@@ -139,7 +139,7 @@ test "Given an empty list, can push a slice" {
 
     try l.push_slice(numbers[0..]);
 
-    try expectEqual(l.len(), 3);
+    try expectEqual(l.length(), 3);
     try expectEqual(l.get(0), 1);
     try expectEqual(l.get(1), 2);
     try expectEqual(l.get(2), 3);
@@ -220,7 +220,7 @@ test "Can create a list with different types" {
     try l.push(void_element2);
     try l.push(void_element3);
 
-    try expectEqual(l.len(), 3);
+    try expectEqual(l.length(), 3);
     try expectEqual(l.get(0), void_element1);
     try expectEqual(l.get(1), void_element2);
     try expectEqual(l.get(2), void_element3);

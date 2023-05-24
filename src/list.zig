@@ -12,69 +12,69 @@ pub fn List(comptime T: type) type {
     return struct {
         const Self = @This();
 
-        allocator: Allocator,
-        first: ?*Node(T),
-        length: usize,
+        _allocator: Allocator,
+        _first: ?*Node(T),
+        _length: usize,
 
         pub fn init(allocator: Allocator) Self {
             return Self{
-                .first = null,
-                .length = 0,
-                .allocator = allocator,
+                ._first = null,
+                ._length = 0,
+                ._allocator = allocator,
             };
         }
 
         pub fn deinit(self: Self) void {
-            var current = self.first;
+            var current = self._first;
             while (current) |node| {
                 current = node.deinit();
             }
         }
 
-        pub fn len(self: Self) usize {
-            return self.length;
+        pub fn length(self: Self) usize {
+            return self._length;
         }
 
         pub fn empty(self: Self) bool {
-            return self.length == 0;
+            return self._length == 0;
         }
 
         pub fn push(self: *Self, element: T) ListError!void {
-            const new_node = try Node(T).init(self.allocator, element);
+            const new_node = try Node(T).init(self._allocator, element);
 
-            if (self.first == null) {
-                self.first = new_node;
+            if (self._first == null) {
+                self._first = new_node;
             } else {
                 var last_node = try self.get_last_node();
                 last_node.link(new_node);
             }
 
-            self.length += 1;
+            self._length += 1;
         }
 
         pub fn insert(self: *Self, element: T, index: usize) ListError!void {
-            if (index >= self.len()) {
+            if (index >= self.length()) {
                 return self.push(element);
             }
-            const new_node = try Node(T).init(self.allocator, element);
+            const new_node = try Node(T).init(self._allocator, element);
 
             if (index == 0) {
-                new_node.link(self.first);
-                self.first = new_node;
+                new_node.link(self._first);
+                self._first = new_node;
             } else {
                 var previous = self.get_node_at_index(index - 1) catch unreachable;
                 new_node.link(previous.get_next());
                 previous.link(new_node);
             }
 
-            self.length += 1;
+            self._length += 1;
         }
 
         pub fn remove(self: *Self, index: usize) ListError!T {
-            if (self.length <= 1 or index == 0) {
+            if (self._length <= 1 or index == 0) {
                 return self.remove_first();
             }
-            if (index >= self.length) {
+            if (index >= self._length) {
                 return ListError.IndexOutOfBounds;
             }
 
@@ -84,26 +84,26 @@ pub fn List(comptime T: type) type {
             const value = to_remove.get_value();
             previous.link(to_remove.deinit());
 
-            self.length -= 1;
+            self._length -= 1;
 
             return value;
         }
 
         pub fn pop(self: *Self) ListError!T {
-            return self.remove(self.length - 1);
+            return self.remove(self._length - 1);
         }
 
         fn remove_first(self: *Self) ListError!T {
-            if (self.length == 0) {
+            if (self._length == 0) {
                 return ListError.EmptyList;
             }
 
-            const to_remove = self.first.?;
+            const to_remove = self._first.?;
 
             const value = to_remove.get_value();
-            self.first = to_remove.deinit();
+            self._first = to_remove.deinit();
 
-            self.length -= 1;
+            self._length -= 1;
             return value;
         }
 
@@ -113,15 +113,15 @@ pub fn List(comptime T: type) type {
         }
 
         fn get_last_node(self: Self) ListError!*Node(T) {
-            return self.get_node_at_index(self.len() - 1);
+            return self.get_node_at_index(self.length() - 1);
         }
 
         fn get_node_at_index(self: Self, index: usize) ListError!*Node(T) {
-            if (index >= self.len()) {
+            if (index >= self.length()) {
                 return ListError.IndexOutOfBounds;
             }
 
-            var current = self.first.?;
+            var current = self._first.?;
             for (0..index) |_| {
                 current = current.get_next().?;
             }
@@ -133,7 +133,7 @@ pub fn List(comptime T: type) type {
             context: anytype,
             callback: *const fn (T, @TypeOf(context)) bool,
         ) usize {
-            var current = self.first;
+            var current = self._first;
             var iterated: usize = 0;
             while (current) |node| {
                 iterated += 1;
@@ -148,7 +148,7 @@ pub fn List(comptime T: type) type {
         }
 
         pub fn iterator(self: Self) Iterator(T) {
-            return Iterator(T).init(self.first);
+            return Iterator(T).init(self._first);
         }
 
         pub fn push_slice(self: *Self, slice: []T) ListError!void {
@@ -156,9 +156,9 @@ pub fn List(comptime T: type) type {
 
             var last_node = try self.get_last_node();
             for (slice[1..]) |element| {
-                var to_add = try Node(T).init(self.allocator, element);
+                var to_add = try Node(T).init(self._allocator, element);
                 last_node.link(to_add);
-                self.length += 1;
+                self._length += 1;
                 last_node = to_add;
             }
         }
