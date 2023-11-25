@@ -1,3 +1,3 @@
 # Zig List
 
-Implementación del TDA lista utilizando el lenguaje de programación ZIG
+Implementación de una lista simplemente enlazada utilizando el lenguaje de programación ZIG
